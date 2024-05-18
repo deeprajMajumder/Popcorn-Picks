@@ -9,7 +9,7 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface NetworkingService {
-    @GET("trending/movie/day?")
+    @GET("trending/movie/day")
     suspend fun getMoviesList(
         @Query("language") language: String,
         @Query("api_key") apiKey: String,
@@ -22,8 +22,4 @@ interface NetworkingService {
         @Query("api_key") apiKey: String,
     ) : Response<Movies>
 
-    @GET
-    suspend fun getThumbnail(
-        @Query("poster_path") posterPath: String
-    ) : Response<Bitmap>
 }

@@ -31,6 +31,7 @@ android {
         versionName = "1.0"
 
         buildConfigField("String", "API_KEY", "\"$apiKey\"")
+        multiDexEnabled = true
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -75,6 +76,13 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/license.txt"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/NOTICE.txt"
+            excludes += "META-INF/notice.txt"
         }
     }
 }
@@ -102,11 +110,16 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.cardview)
     implementation (libs.androidx.navigation.compose)
+    implementation(libs.multidex)
     //Coil
     implementation(libs.coil.compose)
     //room
     implementation (libs.androidx.room.runtime)
     implementation(libs.firebase.crashlytics)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.common)
+    implementation(libs.androidx.hilt.work)
+//    implementation(libs.compose.preview.renderer)
     annotationProcessor  (libs.androidx.room.compiler)
     implementation (libs.androidx.room.ktx)
     kapt (libs.androidx.room.compiler)

@@ -9,8 +9,8 @@ import com.popcon.picks.utils.Converters
 
 @Database(
     entities = [OfflineEntity::class],
-    version = 9,
-    exportSchema = false
+    version = 1,
+    exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class AppDataBase : RoomDatabase(){

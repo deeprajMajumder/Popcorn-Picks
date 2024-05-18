@@ -1,4 +1,4 @@
-package com.popcon.picks.views
+package com.popcon.picks.views.viewModel
 
 import android.content.Context
 import android.util.Log
@@ -51,13 +51,6 @@ class MainViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "Error fetching movies: ${e.message}")
                 Toast.makeText(applicationContext, "Unknown Error", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-    fun getMovieThumbnail(posterPath: String) {
-        viewModelScope.launch {
-            if(NetworkUtils.isOnline(applicationContext)){
-                val response = repository.getMovieThumbnail(posterPath)
             }
         }
     }

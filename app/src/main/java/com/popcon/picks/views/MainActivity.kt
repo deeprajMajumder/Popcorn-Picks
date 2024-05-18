@@ -20,7 +20,6 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,6 +40,8 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.popcon.picks.model.Movies
 import com.popcon.picks.ui.theme.PopcornPicksTheme
+import com.popcon.picks.utils.Constants
+import com.popcon.picks.views.viewModel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 
@@ -100,7 +101,7 @@ fun MovieThumbnail(movie: Movies, onClick: () -> Unit) {
             .size(150.dp)
     ) {
         Image(
-            painter = rememberAsyncImagePainter(model = "https://image.tmdb.org/t/p/w200/${movie.posterPath}"),
+            painter = rememberAsyncImagePainter(model = Constants.imageUrlLowRes+movie.posterPath),
             contentDescription = movie.title,
             modifier = Modifier.size(150.dp)
         )
@@ -114,7 +115,7 @@ fun MovieDetailView(movie: Movies, navController: NavController) {
             .padding(16.dp)
     ) {
         Image(
-            painter = rememberAsyncImagePainter(model = "https://image.tmdb.org/t/p/w500/${movie.posterPath}"),
+            painter = rememberAsyncImagePainter(model = Constants.imageUrl+movie.posterPath),
             contentDescription = movie.title,
             modifier = Modifier
                 .fillMaxWidth()

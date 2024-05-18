@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "offline_entity")
 data class OfflineEntity(
     @PrimaryKey(autoGenerate = true) var id: Int? = null,
+    @ColumnInfo(name = "movie_id") var movieId: Int? = null,
     @ColumnInfo(name = "backdrop_path") var backdropPath: String? = null,
     @ColumnInfo(name = "original_title") var originalTitle: String? = null,
     @ColumnInfo(name = "overview") var overview: String? = null,

@@ -1,6 +1,5 @@
 package com.popcon.picks.dataSource.network
 
-import android.graphics.Bitmap
 import com.popcon.picks.model.Movies
 import com.popcon.picks.model.MoviesParent
 import retrofit2.Response
@@ -12,9 +11,5 @@ class Repository @Inject constructor(private val networkingService: NetworkingSe
 
     suspend fun getMovieDetails(id : Int, apiKey: String) : Response<Movies> =
         networkingService.getMovieDetails(id, apiKey)
-
-    suspend fun getMovieThumbnail(posterPath : String) : Response<Bitmap> =
-        networkingService.getThumbnail(posterPath)
-
 
 }
