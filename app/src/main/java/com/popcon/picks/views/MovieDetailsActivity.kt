@@ -96,48 +96,57 @@ class MovieDetailsActivity : AppCompatActivity() {
 
     @Composable
     fun MovieDetailView(movie: OfflineMovieEntity) {
-        Scaffold(topBar = {
-            TopAppBar(title = {
-                Text(text = movie.title ?: "Unknown Title")
-            })
-        }){ innerPadding ->
-            Column(
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Image(
+                painter = rememberAsyncImagePainter(model = Constants.imageUrl+movie.posterPath),
+                contentDescription = movie.title,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                Image(
-                    painter = rememberAsyncImagePainter(model = Constants.imageUrl+movie.posterPath),
-                    contentDescription = movie.title,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp)
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(horizontalArrangement = Arrangement.SpaceBetween){
-                    Text(text = movie.title!!, style = MaterialTheme.typography.h5)
-                    var isWishListed by remember { mutableStateOf(false) }
-                    IconButton(onClick = { isWishListed = !isWishListed }) {
-                        Icon(
-                            imageVector = if (isWishListed) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = null
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(text = "Release Date: ${movie.releaseDate}", style = MaterialTheme.typography.body2)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(text = "Genre: ${movie.genres[0].name}", style = MaterialTheme.typography.body2)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(text = "Runtime: ${movie.runtime}", style = MaterialTheme.typography.body2)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(text = "Original Language: ${movie.spokenLanguages[0].englishName}", style = MaterialTheme.typography.body2)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(text = "Vote average: ${movie.voteAverage}", style = MaterialTheme.typography.body2)
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(text = movie.overview!!, style = MaterialTheme.typography.body1)
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+                    .fillMaxWidth()
+                    .height(300.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = movie.title!!,
+                style = MaterialTheme.typography.h5,
+//                    modifier = Modifier.weight(1f)  // This will make the Text take up all available space
+            )
+//                Row(horizontalArrangement = Arrangement.Start,
+//                    verticalAlignment = Alignment.CenterVertically,
+//                    modifier = Modifier.fillMaxWidth()) {
+//                    Text(
+//                        text = movie.title!!,
+//                        style = MaterialTheme.typography.h5,
+//                        modifier = Modifier.weight(1f)  // This will make the Text take up all available space
+//                    )
+//                    Spacer(modifier = Modifier.weight(1f))  // This Spacer will push the IconButton to the end
+//                    var isWishListed by remember { mutableStateOf(false) }
+//                    IconButton(
+//                        onClick = { isWishListed = !isWishListed },
+//                    ) {
+//                        Icon(
+//                            imageVector = if (isWishListed) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+//                            contentDescription = null
+//                        )
+//                    }
+//                }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = "Release Date: ${movie.releaseDate}", style = MaterialTheme.typography.body2)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = "Genre: ${movie.genres[0].name}", style = MaterialTheme.typography.body2)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = "Runtime: ${movie.runtime}", style = MaterialTheme.typography.body2)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = "Original Language: ${movie.spokenLanguages[0].englishName}", style = MaterialTheme.typography.body2)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = "Vote average: ${movie.voteAverage}", style = MaterialTheme.typography.body2)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(text = movie.overview!!, style = MaterialTheme.typography.body1)
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

@@ -17,22 +17,25 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Divider
+import androidx.compose.material.DrawerState
+import androidx.compose.material.DrawerValue
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
+import androidx.compose.material.Switch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.rememberDrawerState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -49,17 +52,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.paging.LoadState
+import androidx.paging.PagingData
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.rememberAsyncImagePainter
 import com.popcon.picks.dataSource.localDataBase.OfflineEntity
 import com.popcon.picks.ui.theme.PopcornPicksTheme
 import com.popcon.picks.utils.Constants
 import com.popcon.picks.views.viewModel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.Flow
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,27 +80,31 @@ class MainActivity : ComponentActivity() {
             var isDarkTheme by remember { mutableStateOf(false) }
             val scaffoldState = rememberScaffoldState()
             val scope = rememberCoroutineScope()
-            PopcornPicksTheme {
+            val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+            PopcornPicksTheme(
+                darkTheme = isDarkTheme
+            ) {
                 Surface(color = MaterialTheme.colors.background) {
                     Scaffold(topBar = {
                         TopAppBar(
                             title = { Text("Popcorn Picks") },
                             navigationIcon = {
-                                IconButton(onClick = {
-                                    scope.launch {
-                                        scaffoldState.drawerState.open()
-                                    }
-                                }) {
+                                IconButton(onClick = { }) {
                                     Icon(Icons.Default.Menu, contentDescription = "menu drawer")
                                 }
                             }
                         )
                     },
                         drawerContent = {
-                            DrawerContent(isDarkTheme) { isDark ->
-                                isDarkTheme = isDark
+                            SideMenuDrawer(drawerState = drawerState) {
+                                isDarkTheme = it
                             }
-                        }) { innerPadding ->
+                        },
+                        drawerBackgroundColor = MaterialTheme.colors.surface,
+                        drawerContentColor = MaterialTheme.colors.onSurface,
+                        drawerScrimColor = Color.Transparent,
+                        drawerGesturesEnabled = true
+                        ) { innerPadding ->
                         AppNavigation(innerPadding, mainViewModel)
                     }
                 }
@@ -104,29 +114,39 @@ class MainActivity : ComponentActivity() {
 
 
     @Composable
-    fun DrawerContent(isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Text(
-                text = "Settings",
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                modifier = Modifier.padding(16.dp)
-            )
-            Divider()
-            Row(
+    fun SideMenuDrawer(
+        drawerState: DrawerState,
+        onThemeToggle: (Boolean) -> Unit
+    ) {
+
+        val isDarkTheme = false
+        val drawerContentColor = if (isDarkTheme) Color.White else Color.Black
+
+        // Call PopcornPicksTheme and provide the content parameter
+        PopcornPicksTheme(darkTheme = isDarkTheme) {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onThemeChange(!isDarkTheme) }
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxSize()
+                    .padding(start = 16.dp, top = 32.dp)
             ) {
-                Text(
-                    text = if (isDarkTheme) "Switch to Light Theme" else "Switch to Dark Theme",
-                    fontSize = 18.sp
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(start = 8.dp)
+                ) {
+                    Text(
+                        text = "Dark Mode",
+                        color = drawerContentColor
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Switch(
+                        checked = isDarkTheme,
+                        onCheckedChange = { onThemeToggle(!isDarkTheme) }
+                    )
+                }
             }
         }
     }
+
 
     @Composable
     fun AppNavigation(
@@ -139,7 +159,7 @@ class MainActivity : ComponentActivity() {
                 LoadingView()
             }
             is MainViewModel.MovieDataUiState.Loaded -> {
-                MovieGridView(movieList = state.movies)
+                MovieGridView(movieList = mainViewModel.pagedMovies)
             }
             is MainViewModel.MovieDataUiState.Error -> {
                 Toast.makeText(this@MainActivity, state.message, Toast.LENGTH_LONG).show()
@@ -160,20 +180,44 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun MovieGridView(movieList: List<OfflineEntity?>) {
+    fun MovieGridView(movieList: Flow<PagingData<OfflineEntity>>) {
+        val lazyMovieItems = movieList.collectAsLazyPagingItems()
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             modifier = Modifier.padding(16.dp)
         ) {
-            items(movieList.size) { index ->
-                val movie = movieList[index]
-                MovieThumbnail(movie!!) {
-                    val intent = Intent(this@MainActivity, MovieDetailsActivity::class.java).apply {
-                        putExtra("movieId", movie.movieId)
+            items(lazyMovieItems.itemCount) { index ->
+                val movie = lazyMovieItems[index]
+                if (movie != null) {
+                    MovieThumbnail(movie) {
+                        val intent = Intent(this@MainActivity, MovieDetailsActivity::class.java).apply {
+                            putExtra("movieId", movie.movieId)
+                        }
+                        Log.d(TAG, "Starting MovieDetailsActivity with movieId: ${movie.movieId}")
+                        startActivity(intent)
                     }
-                    Log.d(TAG, "Starting MovieDetailsActivity with movieId: ${movie.movieId}")
-                    startActivity(intent)
+                }
+            }
+
+            lazyMovieItems.apply {
+                when {
+                    loadState.refresh is LoadState.Loading -> {
+                        item {
+                            LoadingView()
+                        }
+                    }
+                    loadState.append is LoadState.Loading -> {
+                        item {
+                            LoadingView()
+                        }
+                    }
+                    loadState.append is LoadState.Error -> {
+                        val e = lazyMovieItems.loadState.append as LoadState.Error
+                        item {
+                            Text("Error: ${e.error.localizedMessage}", color = Color.Red)
+                        }
+                    }
                 }
             }
         }

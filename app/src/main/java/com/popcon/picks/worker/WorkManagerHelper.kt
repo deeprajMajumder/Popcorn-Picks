@@ -1,7 +1,6 @@
 package com.popcon.picks.worker
 
 import android.content.Context
-import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import java.util.concurrent.TimeUnit
@@ -11,7 +10,7 @@ object WorkManagerHelper {
 
     fun startFetchMovieListWorker(context: Context) {
         val fetchMovieListWork = PeriodicWorkRequestBuilder<FetchMovieListWorker>(
-            15, TimeUnit.MINUTES
+            30, TimeUnit.MINUTES
         ).addTag(WORK_TAG)
             .build()
 

@@ -10,8 +10,8 @@ interface OfflineDataDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(offlineData: List<OfflineEntity>)
 
-    @Query("SELECT * FROM offline_entity")
-    suspend fun getAll(): List<OfflineEntity?>
+    @Query("SELECT * FROM offline_entity LIMIT 20 OFFSET :offset")
+    suspend fun getMoviesByPage(offset: Int): List<OfflineEntity>
 
     @Query("SELECT * FROM offline_entity WHERE movie_id = :movieId")
     suspend fun getMovieById(movieId: Int): OfflineEntity?

@@ -1,8 +1,10 @@
 package com.popcon.picks.di
 
 import android.content.Context
+import android.content.SharedPreferences
 import com.popcon.picks.dataSource.localDataBase.AppDataBase
 import com.popcon.picks.dataSource.network.NetworkingService
+import com.popcon.picks.utils.Constants
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,15 +29,15 @@ class AppModule {
         Retrofit.Builder()
             .client(getOkHttpClient())
             .addConverterFactory(GsonConverterFactory.create())
-            .baseUrl(BASE_URL)
+            .baseUrl(Constants.BASE_URL)
             .build()
             .create(NetworkingService::class.java)
 
     private fun getOkHttpClient(): OkHttpClient {
         val client = OkHttpClient.Builder()
-            .connectTimeout(NETWORK_REQUEST_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .readTimeout(NETWORK_REQUEST_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .writeTimeout(NETWORK_REQUEST_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .connectTimeout(Constants.NETWORK_REQUEST_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .readTimeout(Constants.NETWORK_REQUEST_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .writeTimeout(Constants.NETWORK_REQUEST_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             })
@@ -46,9 +48,9 @@ class AppModule {
     fun provideDatabase(@ApplicationContext appContext: Context): AppDataBase {
         return AppDataBase(appContext)
     }
-
-    companion object {
-        const val NETWORK_REQUEST_TIMEOUT_SECONDS = 30L
-        const val BASE_URL = "https://api.themoviedb.org/3/"
+    @Provides
+    @Singleton
+    fun provideSharedPreferences(@ApplicationContext appContext: Context): SharedPreferences {
+        return appContext.getSharedPreferences("PopcornPicks", Context.MODE_PRIVATE)
     }
 }

@@ -1,53 +1,63 @@
 package com.popcon.picks.dataSource
 
+import android.content.SharedPreferences
 import android.util.Log
+import androidx.paging.PagingSource
 import com.popcon.picks.dataSource.localDataBase.AppDataBase
 import com.popcon.picks.dataSource.localDataBase.OfflineEntity
 import com.popcon.picks.dataSource.localDataBase.OfflineMovieEntity
 import com.popcon.picks.dataSource.network.NetworkRepository
+import com.popcon.picks.utils.Constants
 import javax.inject.Inject
 
 class Repository @Inject constructor(
     private val networkRepository: NetworkRepository,
-    private val appdataBase: AppDataBase
+    private val appdataBase: AppDataBase,
+    private val sharedPreferences: SharedPreferences
 ) {
     private val TAG = Repository::class.java.simpleName
-    suspend fun getMovieList(language: String, apiKey: String, page: Int): List<OfflineEntity?> {
-        if (appdataBase.getOfflineDataDao().getAll().isEmpty()) {
+    suspend fun getMovieList(language: String, apiKey: String, page: Int): List<OfflineEntity> {
+        val offset = if (page == 1) 0 else page * 20 // Calculate the offset based on the page number
+        val offlineData = appdataBase.getOfflineDataDao().getMoviesByPage(offset)
+        return if (offlineData.isNotEmpty()) {
+            // If offline data is available, return it
+            offlineData
+        } else {
+            // If offline data is not available, fetch from network
             val response = networkRepository.getMoviesList(language, apiKey, page)
+            // Update last fetched page number in SharedPreferences
+            sharedPreferences.edit().putInt(Constants.LAST_FETCHED_PAGE_KEY, response.body()?.page ?: 1).apply()
             if (response.isSuccessful) {
-                response.body()?.results?.let {
-                    val offlineEntities = response.body()?.results?.map { movie ->
-                        OfflineEntity(
-                            movieId = movie.id,
-                            backdropPath = movie.backdropPath,
-                            originalTitle = movie.originalTitle,
-                            overview = movie.overview,
-                            posterPath = movie.posterPath,
-                            mediaType = movie.mediaType,
-                            adult = movie.adult,
-                            title = movie.title,
-                            originalLanguage = movie.originalLanguage,
-                            genreIds = movie.genreIds,
-                            popularity = movie.popularity,
-                            releaseDate = movie.releaseDate,
-                            video = movie.video,
-                            voteAverage = movie.voteAverage,
-                            voteCount = movie.voteCount
-                        )
-                    } ?: emptyList()
-
+                response.body()?.results?.map { movie ->
+                    OfflineEntity(
+                        movieId = movie.id,
+                        backdropPath = movie.backdropPath,
+                        originalTitle = movie.originalTitle,
+                        overview = movie.overview,
+                        posterPath = movie.posterPath,
+                        mediaType = movie.mediaType,
+                        adult = movie.adult,
+                        title = movie.title,
+                        originalLanguage = movie.originalLanguage,
+                        genreIds = movie.genreIds,
+                        popularity = movie.popularity,
+                        releaseDate = movie.releaseDate,
+                        video = movie.video,
+                        voteAverage = movie.voteAverage,
+                        voteCount = movie.voteCount
+                    )
+                }?.also { offlineEntities ->
+                    // Insert fetched data into the database
                     appdataBase.getOfflineDataDao().insertAll(offlineEntities)
-
-                    return offlineEntities
-                }
+                } ?: emptyList()
             } else {
                 Log.e(TAG, "Network call failed: ${response.errorBody()?.string()}")
+                emptyList()
             }
-        } else {
-            return appdataBase.getOfflineDataDao().getAll()
         }
-        return emptyList()
+    }
+    fun getMoviesPagingSource(language: String, apiKey: String): PagingSource<Int, OfflineEntity> {
+        return MoviePagingSource(this, language, apiKey)
     }
 
     suspend fun getMovieDetails(movieId: Int, apiKey: String): OfflineMovieEntity {

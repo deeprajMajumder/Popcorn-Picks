@@ -111,6 +111,10 @@ dependencies {
     implementation(libs.androidx.cardview)
     implementation (libs.androidx.navigation.compose)
     implementation(libs.multidex)
+    //pagination
+    implementation ("androidx.paging:paging-runtime:3.3.0")
+    // optional - Jetpack Compose integration
+    implementation ("androidx.paging:paging-compose:3.3.0")
     //Coil
     implementation(libs.coil.compose)
     //room

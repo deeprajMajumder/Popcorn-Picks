@@ -1,6 +1,7 @@
 package com.popcon.picks.worker
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
@@ -17,14 +18,20 @@ class FetchMovieListWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
     private val appDataBase: AppDataBase,
-    private val networkRepository: NetworkRepository) :
-    CoroutineWorker(context, workerParams) {
+    private val networkRepository: NetworkRepository,
+    private val sharedPreferences: SharedPreferences
+) : CoroutineWorker(context, workerParams) {
     private val TAG = FetchMovieListWorker::class.java.simpleName
     private var workId = workerParams.id
     override suspend fun doWork(): Result {
         return try {
             Log.d(TAG, "doWork id: $workId")
-            val response = networkRepository.getMoviesList(Constants.language, Constants.apiKey, 2)
+            // Retrieve last fetched page number from SharedPreferences
+            val lastFetchedPage = sharedPreferences.getInt(Constants.LAST_FETCHED_PAGE_KEY, 1)
+            val nextPage = lastFetchedPage + 1
+            val response = networkRepository.getMoviesList(Constants.language, Constants.apiKey, nextPage)
+            // Update last fetched page number in SharedPreferences
+            sharedPreferences.edit().putInt(Constants.LAST_FETCHED_PAGE_KEY, response.body()?.page ?: 1).apply()
             if (response.isSuccessful) {
                 Log.d(TAG, "doWork: ${response.body()}")
                 val offlineEntities = response.body()?.results?.map { movie ->
@@ -55,6 +62,11 @@ class FetchMovieListWorker @AssistedInject constructor(
         } catch (e: Exception) {
             Result.failure()
         }
+    }
+    // Helper function to check if page already fetched
+    private fun isPageAlreadyFetched(pageNumber: Int): Boolean {
+        val lastFetchedPage = sharedPreferences.getInt(Constants.LAST_FETCHED_PAGE_KEY, 1)
+        return pageNumber <= lastFetchedPage
     }
 
 }
