@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import androidx.work.WorkManager
 import com.popcon.picks.dataSource.localDataBase.AppDataBase
 import com.popcon.picks.worker.WorkManagerHelper
 import dagger.hilt.android.HiltAndroidApp
@@ -15,7 +16,6 @@ class PopcornPicks : Application(), Configuration.Provider {
         var instance: PopcornPicks? = null
     }
     private val TAG = PopcornPicks::class.java.simpleName
-    private var mAppDatabase: AppDataBase? = null
 
     @Inject
     lateinit var workerFactory : HiltWorkerFactory
@@ -23,7 +23,6 @@ class PopcornPicks : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         instance = this
-        mAppDatabase = AppDataBase.invoke(this)
         WorkManagerHelper.startFetchMovieListWorker(applicationContext) //start work manager to fetch movie list every 30 min
     }
     override fun onTerminate() {

@@ -8,13 +8,14 @@ import androidx.room.TypeConverters
 import com.popcon.picks.utils.Converters
 
 @Database(
-    entities = [OfflineEntity::class],
+    entities = [OfflineEntity::class, OfflineMovieEntity::class],
     version = 1,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class AppDataBase : RoomDatabase(){
     abstract fun getOfflineDataDao() : OfflineDataDao
+    abstract fun getOfflineMovieDao() : OfflineMovieDataDao
 
     companion object{
         @Volatile

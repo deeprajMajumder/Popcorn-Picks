@@ -7,7 +7,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.popcon.picks.dataSource.localDataBase.AppDataBase
 import com.popcon.picks.dataSource.localDataBase.OfflineEntity
-import com.popcon.picks.dataSource.network.Repository
+import com.popcon.picks.dataSource.network.NetworkRepository
 import com.popcon.picks.utils.Constants
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -17,14 +17,14 @@ class FetchMovieListWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
     private val appDataBase: AppDataBase,
-    private val repository: Repository) :
+    private val networkRepository: NetworkRepository) :
     CoroutineWorker(context, workerParams) {
     private val TAG = FetchMovieListWorker::class.java.simpleName
     private var workId = workerParams.id
     override suspend fun doWork(): Result {
         return try {
             Log.d(TAG, "doWork id: $workId")
-            val response = repository.getMoviesList(Constants.language, Constants.apiKey, 2)
+            val response = networkRepository.getMoviesList(Constants.language, Constants.apiKey, 2)
             if (response.isSuccessful) {
                 Log.d(TAG, "doWork: ${response.body()}")
                 val offlineEntities = response.body()?.results?.map { movie ->
@@ -52,7 +52,6 @@ class FetchMovieListWorker @AssistedInject constructor(
             } else {
                 Result.failure()
             }
-            Result.success()
         } catch (e: Exception) {
             Result.failure()
         }

@@ -1,11 +1,10 @@
 package com.popcon.picks.dataSource.network
 
-import android.graphics.Bitmap
-import com.popcon.picks.model.Movies
 import com.popcon.picks.model.MoviesParent
-import okhttp3.ResponseBody
+import com.popcon.picks.model.movieDetails.MovieDetails
 import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface NetworkingService {
@@ -16,10 +15,10 @@ interface NetworkingService {
         @Query("page") page: Int, //each page contains 20 movies
     ) : Response<MoviesParent>
 
-    @GET("movie/")
+    @GET("movie/{movieId}")
     suspend fun getMovieDetails(
-        @Query("") movieId: Int,
+        @Path("movieId") movieId: Int,
         @Query("api_key") apiKey: String,
-    ) : Response<Movies>
+    ): Response<MovieDetails>
 
 }
