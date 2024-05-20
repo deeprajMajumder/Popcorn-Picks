@@ -31,6 +31,13 @@ class MainViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<MovieDataUiState>(MovieDataUiState.Empty)
     val uiState: StateFlow<MovieDataUiState> = _uiState
 
+    private val _isDarkTheme = MutableStateFlow(false)
+    val isDarkTheme: StateFlow<Boolean> = _isDarkTheme
+
+    fun toggleTheme() {
+        _isDarkTheme.value = !_isDarkTheme.value
+    }
+
     init {
         fetchMovies()
     }
@@ -95,6 +102,8 @@ class MainViewModel @Inject constructor(
         ),
         pagingSourceFactory = { repository.getMoviesPagingSource(Constants.language, Constants.apiKey) }
     ).flow.cachedIn(viewModelScope)
+
+
 
     sealed class MovieDataUiState {
         data object Loading : MovieDataUiState()

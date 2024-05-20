@@ -17,17 +17,16 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.DrawerState
-import androidx.compose.material.DrawerValue
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -35,24 +34,23 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Switch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.rememberDrawerState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,6 +64,7 @@ import com.popcon.picks.utils.Constants
 import com.popcon.picks.views.viewModel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -77,10 +76,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            var isDarkTheme by remember { mutableStateOf(false) }
+            val isDarkTheme by mainViewModel.isDarkTheme.collectAsState()
             val scaffoldState = rememberScaffoldState()
             val scope = rememberCoroutineScope()
-            val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
             PopcornPicksTheme(
                 darkTheme = isDarkTheme
             ) {
@@ -89,16 +87,21 @@ class MainActivity : ComponentActivity() {
                         TopAppBar(
                             title = { Text("Popcorn Picks") },
                             navigationIcon = {
-                                IconButton(onClick = { }) {
-                                    Icon(Icons.Default.Menu, contentDescription = "menu drawer")
+                                IconButton(onClick = { scope.launch {
+                                        scaffoldState.drawerState.open()
+                                    }
+                                }) {
+                                    Icon(Icons.Default.Menu, contentDescription = "Menu drawer")
                                 }
-                            }
+                            },
+                            colors = TopAppBarDefaults.smallTopAppBarColors(
+                                containerColor = Color.Yellow
+                            )
                         )
                     },
+                        scaffoldState = scaffoldState,
                         drawerContent = {
-                            SideMenuDrawer(drawerState = drawerState) {
-                                isDarkTheme = it
-                            }
+                            DrawerAppComponent(isDarkTheme)
                         },
                         drawerBackgroundColor = MaterialTheme.colors.surface,
                         drawerContentColor = MaterialTheme.colors.onSurface,
@@ -112,36 +115,25 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
     @Composable
-    fun SideMenuDrawer(
-        drawerState: DrawerState,
-        onThemeToggle: (Boolean) -> Unit
-    ) {
+    fun DrawerAppComponent(isDarkTheme: Boolean) {
 
-        val isDarkTheme = false
-        val drawerContentColor = if (isDarkTheme) Color.White else Color.Black
+        ModalDrawerSheet{
+            LazyColumn(modifier = Modifier.padding(16.dp)) {
+                item {
+                    Text(text = "Settings", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row( modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {  },
+                        verticalAlignment = Alignment.CenterVertically){
+                        Text(text = "Dark Mode", modifier = Modifier.weight(1f))
+                        Switch(
+                            checked = isDarkTheme,
+                            onCheckedChange = { mainViewModel.toggleTheme() }
+                        )
 
-        // Call PopcornPicksTheme and provide the content parameter
-        PopcornPicksTheme(darkTheme = isDarkTheme) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(start = 16.dp, top = 32.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(start = 8.dp)
-                ) {
-                    Text(
-                        text = "Dark Mode",
-                        color = drawerContentColor
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Switch(
-                        checked = isDarkTheme,
-                        onCheckedChange = { onThemeToggle(!isDarkTheme) }
-                    )
+                    }
                 }
             }
         }
@@ -175,7 +167,7 @@ class MainActivity : ComponentActivity() {
                 .fillMaxSize()
                 .wrapContentSize(Alignment.Center)
         ) {
-            CircularProgressIndicator()
+            CircularProgressIndicator(color = Color.Yellow)
         }
     }
 
@@ -226,40 +218,40 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun MovieThumbnail(movie: OfflineEntity?, onClick: () -> Unit) {
         Card(
-            shape = RoundedCornerShape(10.dp),
+            shape = RoundedCornerShape(6.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colors.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier
-                .padding(8.dp)
+                .padding(10.dp)
                 .clickable { onClick() }
-                .size(150.dp)
         ) {
-            Row(
-                modifier = Modifier.padding(8.dp),
-                horizontalArrangement = Arrangement.Start
-            ) {
+            Column(verticalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier.padding(10.dp)) {
                 Image(
                     painter = rememberAsyncImagePainter(model = Constants.imageUrlLowRes + movie?.posterPath),
                     contentDescription = movie?.title,
                     modifier = Modifier.size(150.dp)
                 )
-                Column(verticalArrangement = Arrangement.Top) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = movie?.title!!,
-                        style = MaterialTheme.typography.body1,
-                        fontSize = 20.sp
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Release Date: ${movie.releaseDate}",
-                        style = MaterialTheme.typography.body2,
-                        fontSize = 16.sp
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = movie?.title!!,
+                    style = MaterialTheme.typography.body1,
+                    fontSize = 20.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Release Date: ${movie.releaseDate}",
+                    style = MaterialTheme.typography.body2,
+                    fontSize = 16.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
+    }
+    enum class DrawerAppScreen {
+        Screen1,
+        Screen2,
+        Screen3
     }
 
     @Preview(showBackground = true)

@@ -23,7 +23,7 @@
         tools:targetApi="tiramisu">
         <activity
             android:name=".views.MovieDetailsActivity"
-            android:theme="@style/Theme.AppCompat"
+            android:theme="@style/Theme.PopcornPicks"
             android:exported="false" />
         <activity
             android:name=".views.MainActivity"

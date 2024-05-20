@@ -30,32 +30,37 @@ class FetchMovieListWorker @AssistedInject constructor(
             val lastFetchedPage = sharedPreferences.getInt(Constants.LAST_FETCHED_PAGE_KEY, 1)
             val nextPage = lastFetchedPage + 1
             val response = networkRepository.getMoviesList(Constants.language, Constants.apiKey, nextPage)
-            // Update last fetched page number in SharedPreferences
-            sharedPreferences.edit().putInt(Constants.LAST_FETCHED_PAGE_KEY, response.body()?.page ?: 1).apply()
+
             if (response.isSuccessful) {
                 Log.d(TAG, "doWork: ${response.body()}")
-                val offlineEntities = response.body()?.results?.map { movie ->
-                    OfflineEntity(
-                        movieId = movie.id,
-                        backdropPath = movie.backdropPath,
-                        originalTitle = movie.originalTitle,
-                        overview = movie.overview,
-                        posterPath = movie.posterPath,
-                        mediaType = movie.mediaType,
-                        adult = movie.adult,
-                        title = movie.title,
-                        originalLanguage = movie.originalLanguage,
-                        genreIds = movie.genreIds,
-                        popularity = movie.popularity,
-                        releaseDate = movie.releaseDate,
-                        video = movie.video,
-                        voteAverage = movie.voteAverage,
-                        voteCount = movie.voteCount
-                    )
-                } ?: emptyList()
+                if(isPageAlreadyFetched(nextPage)){
+                    val offlineEntities = response.body()?.results?.map { movie ->
+                        OfflineEntity(
+                            movieId = movie.id,
+                            backdropPath = movie.backdropPath,
+                            originalTitle = movie.originalTitle,
+                            overview = movie.overview,
+                            posterPath = movie.posterPath,
+                            mediaType = movie.mediaType,
+                            adult = movie.adult,
+                            title = movie.title,
+                            originalLanguage = movie.originalLanguage,
+                            genreIds = movie.genreIds,
+                            popularity = movie.popularity,
+                            releaseDate = movie.releaseDate,
+                            video = movie.video,
+                            voteAverage = movie.voteAverage,
+                            voteCount = movie.voteCount
+                        )
+                    } ?: emptyList()
 
-                appDataBase.getOfflineDataDao().insertAll(offlineEntities)
-                Result.success()
+                    appDataBase.getOfflineDataDao().insertAll(offlineEntities)
+                    // Update last fetched page number in SharedPreferences
+                    sharedPreferences.edit().putInt(Constants.LAST_FETCHED_PAGE_KEY, nextPage).apply()
+                    Result.success()
+                } else {
+                  Result.success()
+                }
             } else {
                 Result.failure()
             }
