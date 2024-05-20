@@ -1,4 +1,4 @@
-# Dynamic Icon - Android App
+# Popcorn Picks- Android App
 
 ## Overview
 This android project Movie Explorer app that allows users to browse a list of movies and view
